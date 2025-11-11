@@ -5,13 +5,11 @@ require('dotenv').config();
 const app = express();
 const PORT = 6767;
 const user = process.env.USERNAME;
+console.log("Hello", user);
 const servers = process.env.SERVERS.split(" ");
 
 
-// Middleware to parse JSON bodies
 app.use(express.json());
-
-// Middleware to parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 
 // Client interface
@@ -42,7 +40,7 @@ app.post("/", (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log("Server running on port", PORT);
   rl.prompt();
 });
 
