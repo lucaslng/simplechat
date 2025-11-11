@@ -1,6 +1,6 @@
 const express = require("express");
 const readline = require("readline");
-require('dotenv').config();
+require('dotenv').config({quiet: true});
 
 const app = express();
 const PORT = 6767;
