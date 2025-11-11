@@ -3,7 +3,7 @@ const readline = require("readline");
 
 const app = express();
 const PORT = 3000;
-const servers = ["localhost"];
+const servers = ["localhost", "10.241.224.2"];
 const user = "lucaslng";
 
 // Middleware to parse JSON bodies
@@ -21,13 +21,9 @@ const rl = readline.createInterface({
 
 // Function to safely print messages without disrupting the prompt
 function printMessage(message) {
-  // Clear the current line
   readline.clearLine(process.stdout, 0);
-  // Move cursor to beginning of line
   readline.cursorTo(process.stdout, 0);
-  // Print the message
   console.log(message);
-  // Redisplay the prompt
   rl.prompt(true);
 }
 
