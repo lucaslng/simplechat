@@ -1,10 +1,12 @@
 const express = require("express");
 const readline = require("readline");
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
-const servers = ["localhost", "10.241.224.2"];
-const user = "lucaslng";
+const PORT = 6767;
+const user = process.env.USERNAME;
+const servers = process.env.SERVERS.split(" ");
+
 
 // Middleware to parse JSON bodies
 app.use(express.json());
