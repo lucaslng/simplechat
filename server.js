@@ -20,7 +20,7 @@ const rl = readline.createInterface({
 });
 
 // Function to safely print messages without disrupting the prompt
-function printMessage(message) {
+function pr(message) {
   readline.clearLine(process.stdout, 0);
   readline.cursorTo(process.stdout, 0);
   console.log(message);
@@ -29,7 +29,7 @@ function printMessage(message) {
 
 // POST endpoint
 app.post("/", (req, res) => {
-  printMessage(`${req.body.user}: ${req.body.message}`);
+  pr(`${req.body.user}: ${req.body.message}`);
 
   res.status(200).json({
     success: true,
