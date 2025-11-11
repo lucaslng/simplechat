@@ -33,8 +33,7 @@ function printMessage(message) {
 
 // POST endpoint
 app.post("/", (req, res) => {
-  printMessage(JSON.stringify(req.body, null, 2));
-  printMessage("---");
+  printMessage(`${req.body.user}: ${req.body.message}`);
 
   res.status(200).json({
     success: true,
@@ -46,7 +45,6 @@ app.post("/", (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Send POST requests to http://localhost:${PORT}`);
   rl.prompt();
 });
 
