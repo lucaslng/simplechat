@@ -4,7 +4,7 @@ require('dotenv').config({quiet: true});
 
 const app = express();
 const PORT = 6767;
-const user = process.env.USERNAME;
+const user = process.env.NAME;
 console.log("Hello", user);
 const servers = process.env.SERVERS.split(" ");
 
