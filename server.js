@@ -4,8 +4,8 @@ require('dotenv').config({quiet: true});
 
 const app = express();
 const PORT = 6767;
-const user = process.env.NAME;
-console.log("Hello", user);
+const name = process.env.NAME;
+console.log("Hello", name);
 const servers = process.env.SERVERS.split(" ");
 
 
@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  prompt: "Message: ",
+  prompt: `${name}: `,
 });
 
 // Function to safely print messages without disrupting the prompt
@@ -55,7 +55,7 @@ rl.on("line", async (line) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            user: user,
+            user: name,
             message: input,
           }),
         });
