@@ -1,6 +1,4 @@
 const express = require("express");
-const https = require("https");
-const fs = require("fs");
 const readline = require("readline");
 require('dotenv').config({quiet: true});
 
@@ -10,11 +8,6 @@ const name = process.env.NAME;
 console.log("Hello", name);
 const servers = process.env.SERVERS.split(" ");
 
-// TLS/SSL Configuration
-const tlsOptions = {
-  key: fs.readFileSync('./certs/key.pem'),
-  cert: fs.readFileSync('./certs/cert.pem'),
-};
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -45,9 +38,9 @@ app.post("/", (req, res) => {
   });
 });
 
-// Start HTTPS server
-https.createServer(tlsOptions, app).listen(PORT, () => {
-  console.log("Secure server running on port", PORT);
+// Start server
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
   rl.prompt();
 });
 
@@ -56,7 +49,7 @@ rl.on("line", async (line) => {
   if (input) {
     servers.forEach(async (server) => {
       try {
-        const response = await fetch(`https://${server}:${PORT}`, {
+        const response = await fetch(`http://${server}:${PORT}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
