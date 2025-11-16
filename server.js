@@ -1,44 +1,24 @@
-const express = require("express");
-const readline = require("readline");
-require('dotenv').config({quiet: true});
+// server.js
+
+import { NAME, PORT } from "./const.js";
+import { servers } from "./mdns.js";
+import { rl, pr } from "./inout.js";
+
+import express, { json, urlencoded } from "express";
 
 const app = express();
-const PORT = 6767;
-const name = process.env.NAME;
-console.log("Hello", name);
-const servers = process.env.SERVERS.split(" ");
+console.log("Hello", NAME);
 
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(json());
+app.use(urlencoded({ extended: true }));
 
-// Client interface
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: `${name}: `,
-});
-
-// Function to safely print messages without disrupting the prompt
-function pr(message) {
-  readline.clearLine(process.stdout, 0);
-  readline.cursorTo(process.stdout, 0);
-  console.log(message);
-  rl.prompt(true);
-}
-
-// POST endpoint
 app.post("/", (req, res) => {
-  pr(`${req.body.user}: ${req.body.message}`);
+  pr(`${req.body.name} on ${req.ip.split(':').at(-1)}: ${req.body.message}`);
 
-  res.status(200).json({
-    success: true,
-    message: "Message received!\n",
-    receivedData: req.body,
-  });
+  res.status(200);
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
   rl.prompt();
@@ -55,14 +35,14 @@ rl.on("line", async (line) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            user: name,
+            name: NAME,
             message: input,
           }),
         });
-        // const data = await response.json();
-        // printMessage("Server response: " + data.message);
+        console.log(response)
       } catch (error) {
-        // printMessage("Error sending message: " + error.message);
+        pr("Error sending message to", server);
+        servers.delete("server");
       }
     });
   }
