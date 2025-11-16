@@ -15,7 +15,6 @@ app.use(urlencoded({ extended: true }));
 
 app.post("/", (req, res) => {
   pr(`${req.body.name} on ${req.ip.split(':').at(-1)}: ${req.body.message}`);
-
   res.status(200);
 });
 
@@ -39,7 +38,6 @@ rl.on("line", async (line) => {
             message: input,
           }),
         });
-        console.log(response)
       } catch (error) {
         pr("Error sending message to", server);
         servers.delete("server");
