@@ -38,6 +38,10 @@ rl.on("line", async (line) => {
             message: input,
           }),
         });
+        if (!response.ok) {
+          pr("Response", response.status, "for", server);
+          servers.delete(server);
+        }
       } catch (error) {
         pr("Error sending message to", server);
         servers.delete(server);
