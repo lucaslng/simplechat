@@ -40,7 +40,7 @@ rl.on("line", async (line) => {
         });
       } catch (error) {
         pr("Error sending message to", server);
-        servers.delete("server");
+        servers.delete(server);
       }
     });
   }
