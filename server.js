@@ -28,7 +28,7 @@ rl.on("line", async (line) => {
   if (input) {
     servers.forEach(async (server) => {
       try {
-        const response = sendMsg(server);
+        const response = sendMsg(server, input);
         if (!response.ok) {
           pr("Response", response.status, "for", server);
           servers.delete(server);
