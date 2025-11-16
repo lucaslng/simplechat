@@ -28,16 +28,7 @@ rl.on("line", async (line) => {
   if (input) {
     servers.forEach(async (server) => {
       try {
-        const response = await fetch(`http://${server}:${PORT}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: NAME,
-            message: input,
-          }),
-        });
+        const response = sendMsg(server);
         if (!response.ok) {
           pr("Response", response.status, "for", server);
           servers.delete(server);

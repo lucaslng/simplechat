@@ -9,6 +9,7 @@ import net from "net";
 
 const mdns = mDNS({ loopback: false });
 
+/** @type {Set<string>}} */
 export const servers = new Set();
 
 mdns.on("response", function (response) {
