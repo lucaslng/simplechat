@@ -1,12 +1,37 @@
 // mdns.js
 
-import { Bonjour } from 'bonjour-service';
-import { SERVICE_TYPE, PORT } from './const.js';
+import { SERVICE_NAME } from "./const.js";
+import getLocalIP from "./getip.js";
 
-const instance = new Bonjour();
+import mDNS from "multicast-dns";
 
-instance.publish({ name: ' ', host: ' ', type: SERVICE_TYPE, port: PORT });
+const mdns = mDNS();
 
-instance.find({ type: SERVICE_TYPE }, function (service) {
-  console.log('Found a server:', service)
-})
+mdns.on("response", function (response) {
+  response.answers
+    .filter((answer) => answer.name === SERVICE_NAME)
+    .forEach((answer) =>
+      console.log("Found server:", answer.data.toString())
+    );
+});
+
+mdns.on("query", function (query) {
+  if (query.questions[0] && query.questions[0].name === SERVICE_NAME) {
+    mdns.respond([
+      {
+        name: SERVICE_NAME,
+        type: "TXT",
+        data: getLocalIP(),
+      },
+    ]);
+  }
+});
+
+mdns.query({
+  questions: [
+    {
+      name: SERVICE_NAME,
+      type: "TXT",
+    },
+  ],
+});
