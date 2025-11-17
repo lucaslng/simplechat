@@ -13,6 +13,7 @@ const mdns = mDNS({ loopback: false });
 export const servers = new Set();
 
 mdns.on("response", function (response) {
+  pr(response.answers);
   response.answers
     .filter((answer) => answer.name === SERVICE_NAME && net.isIPv4(answer.data.toString()))
     .forEach((answer) => {
@@ -22,6 +23,7 @@ mdns.on("response", function (response) {
 });
 
 mdns.on("query", function (query) {
+  pr(query.questions);
   if (query.questions[0] && query.questions[0].name === SERVICE_NAME) {
     mdns.respond([
       {
@@ -36,8 +38,8 @@ mdns.on("query", function (query) {
 mdns.query({
   questions: [
     {
-      name: SERVICE_NAME,
-      type: "TXT",
+      name: "hello",
+      type: "A",
     },
   ],
 });
