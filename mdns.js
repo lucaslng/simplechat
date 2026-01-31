@@ -17,6 +17,7 @@ mdns.on("response", function (response) {
 		.filter((answer) => answer.name === SERVICE_NAME && answer.type === "A")
 		.forEach((answer) => {
 		const ip = answer.data;
+		
 		if (net.isIPv4(ip) && ip !== getLocalIP()) {
 			if (!servers.has(ip)) {
 				pr("Found server:", ip);
@@ -38,7 +39,6 @@ mdns.on("query", function (query) {
 		]);
 	}
 });
-
 
 mdns.query({
 	questions: [

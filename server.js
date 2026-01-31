@@ -14,7 +14,7 @@ app.use(json());
 app.use(urlencoded({ extended: true }));
 
 app.post("/", (req, res) => {
-	pr(`${req.body.name} on ${req.ip.split(":").at(-1)}: ${req.body.message}`);
+	pr(`${req.body.name} (${req.ip.split(':').at(-1)}): ${req.body.message}`);
 	res.status(200).send();
 });
 
@@ -22,6 +22,25 @@ app.listen(PORT, () => {
 	console.log("Server running on port", PORT);
 	rl.prompt();
 });
+
+// detect when someone goes offline
+setInterval(async () => {
+	for (const server of servers) {
+		try {
+			const response = await fetch(`http://${server}:${PORT}/ping`, {
+				method: "GET",
+				signal: AbortSignal.timeout(3000)
+			});
+			if (!response.ok) {
+				pr(`Server ${server} left`);
+				servers.delete(server);
+			}
+		} catch (error) {
+			pr(`Server ${server} left`);
+			servers.delete(server);
+		}
+	}
+}, 5000);
 
 rl.on("line", async (line) => {
 	const input = line.trim();
