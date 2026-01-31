@@ -10,6 +10,8 @@ import express, { json, urlencoded } from "express";
 const app = express();
 console.log("Hello", NAME);
 
+const announcedServers = new Set();
+
 app.use(json());
 app.use(urlencoded({ extended: true }));
 
@@ -23,24 +25,33 @@ app.listen(PORT, () => {
 	rl.prompt();
 });
 
-// detect when someone goes offline
-setInterval(async () => {
-	for (const server of servers) {
-		try {
-			const response = await fetch(`http://${server}:${PORT}/ping`, {
-				method: "GET",
-				signal: AbortSignal.timeout(3000)
-			});
-			if (!response.ok) {
-				pr(`Server ${server} left`);
+setTimeout(() => {
+	setInterval(async () => {
+		for (const server of servers) {
+			try {
+				const response = await fetch(`http://${server}:${PORT}/ping`, {
+					method: "GET",
+					signal: AbortSignal.timeout(3000)
+				});
+				if (!response.ok) {
+					if (announcedServers.has(server)) {
+						pr(`Server ${server} left`);
+						announcedServers.delete(server);
+					}
+					servers.delete(server);
+				} else {
+					announcedServers.add(server);
+				}
+			} catch (error) {
+				if (announcedServers.has(server)) {
+					pr(`Server ${server} left`);
+					announcedServers.delete(server);
+				}
 				servers.delete(server);
 			}
-		} catch (error) {
-			pr(`Server ${server} left`);
-			servers.delete(server);
 		}
-	}
-}, 5000);
+	}, 10000);
+}, 15000);
 
 rl.on("line", async (line) => {
 	const input = line.trim();
