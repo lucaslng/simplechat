@@ -13,7 +13,7 @@ console.log("Hello", NAME);
 const announcedServers = new Set();
 const serverNames = new Map();
 
-function removeServer(server, reason = "left the chat") {
+function removeServer(server, reason = "left") {
 	if (announcedServers.has(server)) {
 		const name = serverNames.get(server) || server;
 		pr(`${name} (${server}) ${reason}`);
@@ -61,7 +61,7 @@ setTimeout(() => {
 						serverNames.set(server, data.name);
 						
 						if (!announcedServers.has(server)) {
-							pr(`${data.name} (${server}) joined the chat`);
+							pr(`${data.name} (${server}) joined`);
 						}
 					}
 					announcedServers.add(server);
@@ -77,7 +77,6 @@ rl.on("line", async (line) => {
 	const input = line.trim();
 
 	if (input === "!!exit") {
-		console.log("Goodbye!");
 		process.exit(0);
 	}
 	
