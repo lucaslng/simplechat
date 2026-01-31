@@ -18,8 +18,10 @@ mdns.on("response", function (response) {
 		.forEach((answer) => {
 		const ip = answer.data;
 		if (net.isIPv4(ip) && ip !== getLocalIP()) {
-			pr("Found server:", ip);
-			servers.add(ip);
+			if (!servers.has(ip)) {
+				pr("Found server:", ip);
+				servers.add(ip);
+			}
 		}
 	});
 });
@@ -27,12 +29,12 @@ mdns.on("response", function (response) {
 mdns.on("query", function (query) {
 	if (query.questions.some((q) => q.name === SERVICE_NAME)) {
 		mdns.respond([
-		{
-			name: SERVICE_NAME,
-			type: "A",
-			ttl: 300,
-			data: getLocalIP(),
-		},
+			{
+				name: SERVICE_NAME,
+				type: "A",
+				ttl: 300,
+				data: getLocalIP(),
+			},
 		]);
 	}
 });
@@ -50,10 +52,10 @@ mdns.query({
 setInterval(() => {
 	mdns.query({
 		questions: [
-		{
-			name: SERVICE_NAME,
-			type: "A",
-		},
+			{
+				name: SERVICE_NAME,
+				type: "A",
+			},
 		],
 	});
 }, 30000);

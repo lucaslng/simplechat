@@ -25,18 +25,23 @@ app.listen(PORT, () => {
 
 rl.on("line", async (line) => {
 	const input = line.trim();
+
+	if (input === "!!exit") {
+		process.exit(0);
+	}
+	
 	if (input) {
-    servers.forEach(async (server) => {
-		try {
-			const response = await sendMsg(server, input);
-			if (!response.ok) {
-			pr("Response", response.status, "for", server);
-			servers.delete(server);
+		servers.forEach(async (server) => {
+			try {
+				const response = await sendMsg(server, input);
+				if (!response.ok) {
+				pr("Response", response.status, "for", server);
+				servers.delete(server);
+				}
+			} catch (error) {
+				pr("Error sending message to", server);
+				servers.delete(server);
 			}
-		} catch (error) {
-			pr("Error sending message to", server);
-			servers.delete(server);
-		}
 		});
 	}
 	rl.prompt();
