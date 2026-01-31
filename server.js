@@ -11,13 +11,33 @@ const app = express();
 console.log("Hello", NAME);
 
 const announcedServers = new Set();
+const serverNames = new Map();
+
+function removeServer(server, reason = "left the chat") {
+	if (announcedServers.has(server)) {
+		const name = serverNames.get(server) || server;
+		pr(`${name} (${server}) ${reason}`);
+		announcedServers.delete(server);
+	}
+	serverNames.delete(server);
+	servers.delete(server);
+}
 
 app.use(json());
 app.use(urlencoded({ extended: true }));
 
 app.post("/", (req, res) => {
-	pr(`${req.body.name} (${req.ip.split(':').at(-1)}): ${req.body.message}`);
+	const senderIP = req.ip.split(':').at(-1);
+	const senderName = req.body.name;
+
+	serverNames.set(senderIP, senderName);
+	
+	pr(`${senderName} (${senderIP}): ${req.body.message}`);
 	res.status(200).send();
+});
+
+app.get("/ping", (req, res) => {
+	res.status(200).json({ name: NAME });
 });
 
 app.listen(PORT, () => {
@@ -34,20 +54,20 @@ setTimeout(() => {
 					signal: AbortSignal.timeout(3000)
 				});
 				if (!response.ok) {
-					if (announcedServers.has(server)) {
-						pr(`Server ${server} left`);
-						announcedServers.delete(server);
-					}
-					servers.delete(server);
+					removeServer(server);
 				} else {
+					const data = await response.json();
+					if (data.name) {
+						serverNames.set(server, data.name);
+						
+						if (!announcedServers.has(server)) {
+							pr(`${data.name} (${server}) joined the chat`);
+						}
+					}
 					announcedServers.add(server);
 				}
 			} catch (error) {
-				if (announcedServers.has(server)) {
-					pr(`Server ${server} left`);
-					announcedServers.delete(server);
-				}
-				servers.delete(server);
+				removeServer(server);
 			}
 		}
 	}, 10000);
@@ -57,6 +77,7 @@ rl.on("line", async (line) => {
 	const input = line.trim();
 
 	if (input === "!!exit") {
+		console.log("Goodbye!");
 		process.exit(0);
 	}
 	
@@ -65,12 +86,10 @@ rl.on("line", async (line) => {
 			try {
 				const response = await sendMsg(server, input);
 				if (!response.ok) {
-				pr("Response", response.status, "for", server);
-				servers.delete(server);
+					removeServer(server, "is unreachable");
 				}
 			} catch (error) {
-				pr("Error sending message to", server);
-				servers.delete(server);
+				removeServer(server, "is unreachable");
 			}
 		});
 	}

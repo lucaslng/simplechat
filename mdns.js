@@ -2,7 +2,6 @@
 
 import { SERVICE_NAME } from "./const.js";
 import getLocalIP from "./getip.js";
-import { pr } from "./inout.js";
 
 import mDNS from "multicast-dns";
 import net from "net";
@@ -19,10 +18,7 @@ mdns.on("response", function (response) {
 		const ip = answer.data;
 		
 		if (net.isIPv4(ip) && ip !== getLocalIP()) {
-			if (!servers.has(ip)) {
-				pr("Found server:", ip);
-				servers.add(ip);
-			}
+			servers.add(ip);
 		}
 	});
 });
