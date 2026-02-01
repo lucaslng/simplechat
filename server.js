@@ -32,7 +32,7 @@ app.post("/", (req, res) => {
 
 	serverNames.set(senderIP, senderName);
 	
-	pr(`${senderName} (${senderIP}): ${req.body.message}`);
+	pr(`${senderName}: ${req.body.message}`);
 	res.status(200).send();
 });
 
@@ -61,7 +61,7 @@ setTimeout(() => {
 						serverNames.set(server, data.name);
 						
 						if (!announcedServers.has(server)) {
-							pr(`${data.name} (${server}) joined`);
+							pr(`${data.name} (${server}) joined.`);
 						}
 					}
 					announcedServers.add(server);

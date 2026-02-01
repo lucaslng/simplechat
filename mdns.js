@@ -39,8 +39,8 @@ mdns.on("query", function (query) {
 mdns.query({
 	questions: [
 		{
-		name: SERVICE_NAME,
-		type: "A",
+			name: SERVICE_NAME,
+			type: "A",
 		},
 	],
 });
