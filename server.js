@@ -4,6 +4,7 @@ import { NAME, PORT } from "./const.js";
 import { servers } from "./mdns.js";
 import { rl, pr } from "./inout.js";
 import sendMsg from "./sendMsg.js";
+import { getPublicKey, decrypt, getKeyFingerprint } from "./crypto.js";
 
 import express, { json, urlencoded } from "express";
 
@@ -17,11 +18,12 @@ const serverPublicKeys = new Map();
 function removeServer(server) {
 	if (announcedServers.has(server)) {
 		const name = serverNames.get(server) || server;
-		pr(`${name} (${server})`, 'left.');
+		pr(`${name} (${server})`, "left.");
 		announcedServers.delete(server);
 	}
 
 	serverNames.delete(server);
+	serverPublicKeys.delete(server);
 	servers.delete(server);
 }
 
@@ -33,7 +35,7 @@ app.post("/", (req, res) => {
 	const senderName = req.body.name;
 
 	serverNames.set(senderIP, senderName);
-
+	
 	let message;
 	try {
 		message = decrypt(req.body.message);
@@ -43,12 +45,15 @@ app.post("/", (req, res) => {
 		return;
 	}
 	
-	pr(`${senderName}: ${req.body.message}`);
+	pr(`${senderName} (${senderIP}): ${message}`);
 	res.status(200).send();
 });
 
 app.get("/ping", (req, res) => {
-	res.status(200).json({ name: NAME });
+	res.status(200).json({ 
+		name: NAME,
+		publicKey: getPublicKey()
+	});
 });
 
 app.listen(PORT, () => {
@@ -68,18 +73,23 @@ setTimeout(() => {
 					removeServer(server);
 				} else {
 					const data = await response.json();
+
+					if (data.publicKey) {
+						serverPublicKeys.set(server, data.publicKey);
+					}
+					
 					if (data.name) {
 						serverNames.set(server, data.name);
-
-						if (data.publicKey) {
-							serverPublicKeys.set(server, data.publicKey);
-						}
-						
-						if (!announcedServers.has(server)) {
-							const fingerprint = data.publicKey ? getKeyFingerprint(data.publicKey) : "unknown";
-							pr(`${data.name} (${server}) joined the chat [${fingerprint}]`);
-						}
 					}
+
+					if (!announcedServers.has(server)) {
+						const fingerprint = serverPublicKeys.has(server) 
+							? getKeyFingerprint(serverPublicKeys.get(server))
+							: "no-key";
+						const name = data.name || server;
+						pr(`${name} (${server}) joined [${fingerprint}]`);
+					}
+					
 					announcedServers.add(server);
 				}
 			} catch (error) {
@@ -92,20 +102,37 @@ setTimeout(() => {
 rl.on("line", async (line) => {
 	const input = line.trim();
 
-	if (input === "!!exit") {
+	if (input === ".exit") {
 		process.exit(0);
+	}
+	
+	if (input === ".status") {
+		console.log("\n=== Connection Status ===");
+		console.log("Connected peers:", servers.size);
+		for (const server of servers) {
+			const name = serverNames.get(server) || "unknown";
+			const hasKey = serverPublicKeys.has(server) ? "✓" : "✗";
+			const fingerprint = serverPublicKeys.has(server) 
+				? getKeyFingerprint(serverPublicKeys.get(server))
+				: "none";
+			console.log(`  ${name} (${server}) - Key: ${hasKey} [${fingerprint}]`);
+		}
+		console.log("========================\n");
+		rl.prompt();
+		return;
 	}
 	
 	if (input) {
 		servers.forEach(async (server) => {
 			const publicKey = serverPublicKeys.get(server);
 			if (!publicKey) {
-				pr(`No public key for ${server}, message not sent`);
+				const name = serverNames.get(server) || server;
+				pr(`No public key for ${name} (${server}), message not sent`);
 				return;
 			}
 			
 			try {
-				const response = await sendMsg(server, input);
+				const response = await sendMsg(server, input, publicKey);
 				if (!response.ok) {
 					removeServer(server, "is unreachable");
 				}
