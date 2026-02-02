@@ -12,13 +12,15 @@ console.log("Hello", NAME);
 
 const announcedServers = new Set();
 const serverNames = new Map();
+const serverPublicKeys = new Map();
 
-function removeServer(server, reason = "left") {
+function removeServer(server) {
 	if (announcedServers.has(server)) {
 		const name = serverNames.get(server) || server;
-		pr(`${name} (${server}) ${reason}`);
+		pr(`${name} (${server})`, 'left.');
 		announcedServers.delete(server);
 	}
+
 	serverNames.delete(server);
 	servers.delete(server);
 }
@@ -31,6 +33,15 @@ app.post("/", (req, res) => {
 	const senderName = req.body.name;
 
 	serverNames.set(senderIP, senderName);
+
+	let message;
+	try {
+		message = decrypt(req.body.message);
+	} catch (error) {
+		pr(`Failed to decrypt message from ${senderName} (${senderIP})`);
+		res.status(400).send("Decryption failed");
+		return;
+	}
 	
 	pr(`${senderName}: ${req.body.message}`);
 	res.status(200).send();
@@ -59,9 +70,14 @@ setTimeout(() => {
 					const data = await response.json();
 					if (data.name) {
 						serverNames.set(server, data.name);
+
+						if (data.publicKey) {
+							serverPublicKeys.set(server, data.publicKey);
+						}
 						
 						if (!announcedServers.has(server)) {
-							pr(`${data.name} (${server}) joined.`);
+							const fingerprint = data.publicKey ? getKeyFingerprint(data.publicKey) : "unknown";
+							pr(`${data.name} (${server}) joined the chat [${fingerprint}]`);
 						}
 					}
 					announcedServers.add(server);
@@ -82,6 +98,12 @@ rl.on("line", async (line) => {
 	
 	if (input) {
 		servers.forEach(async (server) => {
+			const publicKey = serverPublicKeys.get(server);
+			if (!publicKey) {
+				pr(`No public key for ${server}, message not sent`);
+				return;
+			}
+			
 			try {
 				const response = await sendMsg(server, input);
 				if (!response.ok) {
