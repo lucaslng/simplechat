@@ -102,7 +102,7 @@ setTimeout(() => {
 rl.on("line", async (line) => {
 	const input = line.trim();
 
-	if (input === "!!exit") {
+	if (input === ".exit") {
 		process.exit(0);
 	}
 	

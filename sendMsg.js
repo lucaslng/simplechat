@@ -1,6 +1,7 @@
 // sendMsg.js
 
 import { NAME, PORT } from "./const.js";
+import { encrypt } from "./crypto.js";
 
 /** 
  * @param {string} server IP address
