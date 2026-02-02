@@ -33,7 +33,7 @@ app.use(urlencoded({ extended: true }));
 app.post("/", (req, res) => {
 	const senderIP = req.ip.split(':').at(-1);
 	const senderName = req.body.name;
-
+	
 	serverNames.set(senderIP, senderName);
 	
 	let message;
@@ -87,7 +87,7 @@ setTimeout(() => {
 							? getKeyFingerprint(serverPublicKeys.get(server))
 							: "no-key";
 						const name = data.name || server;
-						pr(`${name} (${server}) joined [${fingerprint}]`);
+						pr(`${name} (${server}) joined. [${fingerprint}]`);
 					}
 					
 					announcedServers.add(server);
@@ -102,44 +102,28 @@ setTimeout(() => {
 rl.on("line", async (line) => {
 	const input = line.trim();
 
-	if (input === ".exit") {
+	if (input === "!!exit") {
 		process.exit(0);
 	}
 	
-	if (input === ".status") {
-		console.log("\n=== Connection Status ===");
-		console.log("Connected peers:", servers.size);
-		for (const server of servers) {
-			const name = serverNames.get(server) || "unknown";
-			const hasKey = serverPublicKeys.has(server) ? "✓" : "✗";
-			const fingerprint = serverPublicKeys.has(server) 
-				? getKeyFingerprint(serverPublicKeys.get(server))
-				: "none";
-			console.log(`  ${name} (${server}) - Key: ${hasKey} [${fingerprint}]`);
-		}
-		console.log("========================\n");
-		rl.prompt();
-		return;
-	}
-	
 	if (input) {
-		servers.forEach(async (server) => {
+		for (const server of servers) {
 			const publicKey = serverPublicKeys.get(server);
 			if (!publicKey) {
 				const name = serverNames.get(server) || server;
 				pr(`No public key for ${name} (${server}), message not sent`);
-				return;
+				continue;
 			}
 			
 			try {
 				const response = await sendMsg(server, input, publicKey);
 				if (!response.ok) {
-					removeServer(server, "is unreachable");
+					pr(`Failed to send to ${server}: HTTP ${response.status}`);
 				}
 			} catch (error) {
-				removeServer(server, "is unreachable");
+				pr(`Error sending to ${server}: ${error.message}`);
 			}
-		});
+		}
 	}
 	rl.prompt();
 });
