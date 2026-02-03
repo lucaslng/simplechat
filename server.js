@@ -10,6 +10,7 @@ import express, { json, urlencoded } from "express";
 
 const app = express();
 console.log("Hello", NAME);
+console.log("Use .exit to exit.");
 
 const announcedServers = new Set();
 const serverNames = new Map();
@@ -18,7 +19,7 @@ const serverPublicKeys = new Map();
 function removeServer(server) {
 	if (announcedServers.has(server)) {
 		const name = serverNames.get(server) || server;
-		pr(`${name} (${server})`, "left.");
+		pr(`${name} left.`);
 		announcedServers.delete(server);
 	}
 
@@ -35,7 +36,7 @@ app.post("/", (req, res) => {
 	const senderName = req.body.name;
 	
 	serverNames.set(senderIP, senderName);
-	
+
 	let message;
 	try {
 		message = decrypt(req.body.message);
@@ -87,7 +88,7 @@ setTimeout(() => {
 							? getKeyFingerprint(serverPublicKeys.get(server))
 							: "no-key";
 						const name = data.name || server;
-						pr(`${name} (${server}) joined. [${fingerprint}]`);
+						pr(`${name} joined.`);
 					}
 					
 					announcedServers.add(server);
