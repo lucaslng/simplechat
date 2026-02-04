@@ -30,7 +30,7 @@ function removeServer(server) {
 	servers.delete(server);
 }
 
-app.use(json());
+app.use(urlencoded({ extended: true, limit: '10mb' }));
 app.use(urlencoded({ extended: true }));
 
 app.post("/", (req, res) => {
