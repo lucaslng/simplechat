@@ -7,7 +7,7 @@ import sendMsg from "./sendMsg.js";
 import { getPublicKey, decrypt, getKeyFingerprint } from "./crypto.js";
 import { imageToAscii, isImageFile } from "./imageToAscii.js";
 
-import express, { json, urlencoded } from "express";
+import express from "express";
 
 const app = express();
 console.log("Hello", NAME);
@@ -30,8 +30,8 @@ function removeServer(server) {
 	servers.delete(server);
 }
 
+app.use(json({ limit: '10mb' }));
 app.use(urlencoded({ extended: true, limit: '10mb' }));
-app.use(urlencoded({ extended: true }));
 
 app.post("/", (req, res) => {
 	const senderIP = req.ip.split(':').at(-1);
@@ -49,7 +49,7 @@ app.post("/", (req, res) => {
 	}
 
 	if (req.body.isImage) {
-		pr(`${senderName}:\n${message}`);
+		pr(`${senderName} sent an image:\n${message}`);
 	} else {
 		pr(`${senderName}: ${message}`);
 	}
