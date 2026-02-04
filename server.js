@@ -5,12 +5,14 @@ import { servers } from "./mdns.js";
 import { rl, pr } from "./inout.js";
 import sendMsg from "./sendMsg.js";
 import { getPublicKey, decrypt, getKeyFingerprint } from "./crypto.js";
+import { imageToAscii, isImageFile } from "./imageToAscii.js";
 
 import express, { json, urlencoded } from "express";
 
 const app = express();
 console.log("Hello", NAME);
 console.log("Use .exit to exit.");
+console.log("Use .image [path] to send an image as ASCII art.");
 
 const announcedServers = new Set();
 const serverNames = new Map();
@@ -45,8 +47,13 @@ app.post("/", (req, res) => {
 		res.status(400).send("Decryption failed");
 		return;
 	}
-	
-	pr(`${senderName} (${senderIP}): ${message}`);
+
+	if (req.body.isImage) {
+		pr(`${senderName}:\n${message}`);
+	} else {
+		pr(`${senderName}: ${message}`);
+	}
+
 	res.status(200).send();
 });
 
@@ -105,6 +112,44 @@ rl.on("line", async (line) => {
 
 	if (input === ".exit") {
 		process.exit(0);
+	}
+
+	if (input.startsWith(".image ")) {
+		const imagePath = input.substring(7).trim();
+		
+		if (!isImageFile(imagePath)) {
+			pr("Error: File not found or not a valid image (png, jpg, jpeg, gif, bmp, webp)");
+			rl.prompt();
+			return;
+		}
+		
+		try {
+			const asciiArt = await imageToAscii(imagePath);
+			pr(asciiArt);
+			
+			for (const server of servers) {
+				const publicKey = serverPublicKeys.get(server);
+				if (!publicKey) {
+					const name = serverNames.get(server) || server;
+					pr(`No public key for ${name}, message not sent`);
+					continue;
+				}
+				
+				try {
+					const response = await sendMsg(server, asciiArt, publicKey, true);
+					if (!response.ok) {
+						pr(`Failed to send to ${server}: HTTP ${response.status}`);
+					}
+				} catch (error) {
+					pr(`Error sending to ${server}: ${error.message}`);
+				}
+			}
+		} catch (error) {
+			pr(`Error processing image: ${error.message}`);
+		}
+		
+		rl.prompt();
+		return;
 	}
 	
 	if (input) {

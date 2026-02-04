@@ -21,31 +21,61 @@ const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
  */
 export function encrypt(message, publicKeyPem) {
 	const buffer = Buffer.from(message, "utf8");
-	const encrypted = crypto.publicEncrypt(
+
+	const aesKey = crypto.randomBytes(32); // 256-bit key
+	const iv = crypto.randomBytes(16); // 128-bit IV
+	
+	// encrypt with AES first
+	const cipher = crypto.createCipheriv('aes-256-cbc', aesKey, iv);
+	let encryptedMessage = cipher.update(buffer);
+	encryptedMessage = Buffer.concat([encryptedMessage, cipher.final()]);
+	
+	// AES key encrypted with RSA
+	const encryptedKey = crypto.publicEncrypt(
 		{
 			key: publicKeyPem,
 			padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
 			oaepHash: "sha256",
 		},
-		buffer
+		aesKey
 	);
-	return encrypted.toString("base64");
+	
+	const result = Buffer.concat([
+		Buffer.from([encryptedKey.length >> 8, encryptedKey.length & 0xff]),
+		encryptedKey,
+		iv,
+		encryptedMessage
+	]);
+
+	return result.toString("base64");
 }
 
 /**
- * @param {string} encryptedMessage - Base64 encoded encrypted message
+ * @param {string} encryptedMessage - Base64 encoded encrypted message with prefix
  * @returns {string} - Decrypted message
  */
 export function decrypt(encryptedMessage) {
 	const buffer = Buffer.from(encryptedMessage, "base64");
-	const decrypted = crypto.privateDecrypt(
+	const keyLength = (buffer[0] << 8) | buffer[1];
+	
+
+	const encryptedKey = buffer.slice(2, 2 + keyLength);
+	const iv = buffer.slice(2 + keyLength, 2 + keyLength + 16);
+	const encryptedData = buffer.slice(2 + keyLength + 16);
+	
+	const aesKey = crypto.privateDecrypt(
 		{
 			key: privateKey,
 			padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
 			oaepHash: "sha256",
 		},
-		buffer
+		encryptedKey
 	);
+	
+	const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, iv);
+	let decrypted = decipher.update(encryptedData);
+	decrypted = Buffer.concat([decrypted, decipher.final()]);
+	
 	return decrypted.toString("utf8");
 }
 
