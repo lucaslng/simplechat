@@ -114,6 +114,11 @@ rl.on("line", async (line) => {
 		process.exit(0);
 	}
 
+	if (input === ".help") {
+		console.log(".exit: exits the app.");
+		console.log(".image [path]: send an image as ASCII art.");
+	}
+
 	if (input.startsWith(".image ")) {
 		const imagePath = input.substring(7).trim();
 		
