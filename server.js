@@ -7,7 +7,7 @@ import sendMsg from "./sendMsg.js";
 import { getPublicKey, decrypt, getKeyFingerprint } from "./crypto.js";
 import { imageToAscii, isImageFile } from "./imageToAscii.js";
 
-import express from "express";
+import express, { json, urlencoded } from "express";
 
 const app = express();
 console.log("Hello", NAME);
